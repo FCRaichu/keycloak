@@ -124,24 +124,43 @@ public class FcUserStorageProvider implements
 
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
+        System.err.println("=== isValid 호출됨 ===");
+
         if (!supportsCredentialType(input.getType())) {
             return false;
         }
 
-        if (!(user instanceof FcUserAdapter adapter)) {
-            return false;
-        }
-
         String rawPassword = input.getChallengeResponse();
-        String encodedPassword = adapter.getUserEntity().getPassword();
-
-
-        if (rawPassword == null || encodedPassword == null) {
+        if (rawPassword == null || rawPassword.isBlank()) {
             return false;
         }
 
-        // PasswordUtil 써서 비교
-        return PasswordUtil.matches(rawPassword, encodedPassword);
+        String username = user.getUsername();
+        if (username == null || username.isBlank()) {
+            return false;
+        }
+
+        UserEntity foundUser = userRepository.findByUserId(username)
+                .orElse(null);
+
+        if (foundUser == null) {
+            System.err.println("DB 사용자 없음: " + username);
+            return false;
+        }
+
+        String encodedPassword = foundUser.getPassword();
+
+        System.err.println("username = " + username);
+        System.err.println("encodedPassword = " + encodedPassword);
+
+        if (encodedPassword == null || encodedPassword.isBlank()) {
+            return false;
+        }
+
+        boolean matched = PasswordUtil.matches(rawPassword, encodedPassword);
+        System.err.println("matched = " + matched);
+
+        return matched;
     }
 
     @Override

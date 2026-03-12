@@ -2,6 +2,7 @@ package com.fc.keycloak.userstorage.repository;
 
 import com.fc.keycloak.userstorage.model.UserEntity;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -19,6 +20,12 @@ public interface UserRepository {
     boolean existsByUserId(String userId);
 
     boolean existsByNickname(String nickname);
+
+    List<UserEntity> findAll(Integer firstResult, Integer maxResults);
+
+    List<UserEntity> findByUserIdContaining(String keyword, Integer firstResult, Integer maxResults);
+
+    int countAll();
 
 
 }

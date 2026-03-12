@@ -12,18 +12,20 @@ import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.credential.CredentialInputUpdater;
 import org.keycloak.storage.user.UserLookupProvider;
+import org.keycloak.storage.user.UserQueryProvider;
 import org.keycloak.storage.user.UserRegistrationProvider;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
  * 따지자며 Service 레이어
- *
+ * <p>
  * UserLookupProvider -> 사용자 찾기
  * CredentialInputValidator -> 비밀번호 검증
  * CredentialInputUpdater -> 비밀번호 저장/변경
- *
+ * <p>
  * 강상민 : ISFJ
  * 김예은 : ESFJ
  */
@@ -34,7 +36,8 @@ public class FcUserStorageProvider implements
         UserLookupProvider,
         UserRegistrationProvider,
         CredentialInputValidator,
-        CredentialInputUpdater {
+        CredentialInputUpdater,
+        UserQueryProvider {
 
     private final KeycloakSession session;
     private final ComponentModel model;
@@ -196,5 +199,49 @@ public class FcUserStorageProvider implements
         return Stream.empty();
     }
 
+    @Override
+    public Stream<UserModel> searchForUserStream(RealmModel realm,
+                                                 Map<String, String> params,
+                                                 Integer firstResult,
+                                                 Integer maxResults) {
+        String search = params.get(UserModel.SEARCH);
+        if (search != null && !search.isBlank()) {
+            return searchForUserStream(realm, search, firstResult, maxResults);
+        }
+
+        String username = params.get(UserModel.USERNAME);
+        if (username != null && !username.isBlank()) {
+            return userRepository.findByUserIdContaining(username, firstResult, maxResults).stream()
+                    .map(user -> new FcUserAdapter(session, realm, model, user, userRepository));
+        }
+
+        String email = params.get(UserModel.EMAIL);
+        if (email != null && !email.isBlank()) {
+            return Stream.empty(); // 이메일 검색 지원 안하면 빈 스트림
+        }
+
+        // 필터가 없으면 전체 조회
+        return userRepository.findAll(firstResult, maxResults).stream()
+                .map(user -> new FcUserAdapter(session, realm, model, user, userRepository));
+    }
+
+    @Override
+    public Stream<UserModel> getGroupMembersStream(RealmModel realm, GroupModel group, Integer firstResult, Integer maxResults) {
+        return Stream.empty();
+    }
+
+    @Override
+    public Stream<UserModel> searchForUserByUserAttributeStream(RealmModel realm, String attrName, String attrValue) {
+        if ("username".equals(attrName) || "userId".equals(attrName)) {
+            return userRepository.findByUserId(attrValue).stream()
+                    .map(user -> new FcUserAdapter(session, realm, model, user, userRepository));
+        }
+        return Stream.empty();
+    }
+
+    @Override
+    public int getUsersCount(RealmModel realm) {
+        return userRepository.countAll();
+    }
 
 }

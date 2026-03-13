@@ -71,8 +71,12 @@ public class FcUserAdapter extends AbstractUserAdapterFederatedStorage {
         Set<RoleModel> roles = new HashSet<>();
 
         String dbRole = user.getRole(); // "USER" or "ADMIN"
+
+//        System.out.println("1. dbRole = " + dbRole); 디버깅 용도
+        
         if (dbRole != null && !dbRole.isBlank()) {
             RoleModel roleModel = realm.getRole(dbRole);
+//            System.out.println("roleModel != null ? roleModel.getName() = " + (roleModel != null ? roleModel.getName() : "null")); 디버깅 용도
             if (roleModel != null) {
                 roles.add(roleModel);
             }

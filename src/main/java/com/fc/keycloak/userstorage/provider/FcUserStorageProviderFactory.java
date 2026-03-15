@@ -16,12 +16,16 @@ import java.util.List;
 
 /**
  * Keycloak -> DB 연동
+ * 	1.	Keycloak에 "fc-user-storage" 라는 사용자 저장소 Provider를 등록
+ * 	2.	관리자 화면에서 설정할 항목(DB URL, 계정, 비밀번호)을 정의
+ * 	3.	저장된 설정값으로 DataSource, UserRepository 생성
+ * 	4.	최종적으로 FcUserStorageProvider 객체를 만들어 Keycloak에 넘김
+ * 	5.	설정 저장 전에 DB 연결이 되는지 검증
  */
 
 public class FcUserStorageProviderFactory implements UserStorageProviderFactory<FcUserStorageProvider> {
 
     public static final String PROVIDER_ID = "fc-user-storage";
-
     public static final String DB_URL = "dbUrl";
     public static final String DB_USERNAME = "dbUsername";
     public static final String DB_PASSWORD = "dbPassword";
